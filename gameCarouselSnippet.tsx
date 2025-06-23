@@ -1,7 +1,7 @@
 const GameCarousel: React.FC<CraneOverlayProps> = ({ games }) => {
   //var for concatenating until done
   var loopingGames = [];
-  //minimum number of cards required to fill screen; may be calculable from site styling, but couldn't find location
+  //minimum number of cards required to fill screen; may be calculable from site styling, but couldn't find location (Turns out that the cards seem to be fixed-width and non-scaling, judging from me zooming in and out, meaning it's non-calculable atm)
   const minCards = 8;
   //in a try catch loop due to potential for divide by 0 errors if the passed argument is empty or doesn't support the length() function
   try{ 
