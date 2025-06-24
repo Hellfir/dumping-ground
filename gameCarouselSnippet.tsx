@@ -12,6 +12,8 @@ const GameCarousel: React.FC<CraneOverlayProps> = ({ games }) => {
     } 
     //sets it to the existing constant
     const loopedGames = loopingGames;
+    //alternative:
+    //const loopedGames = [...games,...games,...games];
     //copy-pasted return code; we don't want to return if it fails the try I think?
     return (
       <div className={styles.carouselWrapper}>
