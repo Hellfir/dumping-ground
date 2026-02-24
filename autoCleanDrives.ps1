@@ -29,6 +29,11 @@ if (-not (Test-Path -Path $logPath$logDir$logFileName)){
 $drives | ForEach-Object{
 	#temporarily store drive we're working on
 	$currentDrive = $_
+	#initialize a failsafe
+	$foundADUser = $False
+	#Store drives that will be deleted at the end if failsafe is true
+	$drivesToDelete = @();
+	
 	#For each drive in the list, check that drives do exist.
 	#test-path returns true if exists
 	if (Test-Path -Path $currentDrive){
@@ -41,15 +46,33 @@ $drives | ForEach-Object{
 			#no proper function actually exists for this, so we just try to get the AD user, and catch the exception if thrown
 			try{
 				$user=Get-ADUser $dirName
-				#does not need to be deleted if successful, so we do nothing else.
+				#does not need to be deleted if successful, so we turn off the failsafe, and do nothing else.
 				"$dirName exists in AD" | Out-File -FilePath $logPath$logDir$logFileName -append;
+				$foundADUser = $True;
 			}
 			catch{ 
 				#If user doesn't exist, delete the drive and append to logs.
-				#Remove-Item -Path $currentDrive$dirName -Recurse;
-				$deletedDirs+=$currentDrive+$dirName;
+				
+				$drivesToDelete+=$currentDrive+$dirName;
 				"$currentDrive$dirName needs to be deleted" | Out-File -FilePath $logPath$logDir$logFileName -append;
 			}
+		}
+		
+		if ($foundADUser){
+			#if the script found even a single AD object while iterating through the drive, we should be safe to delete the objects that don't exist in AD.
+			$drivesToDelete | foreach{
+				#Remove-Item -Path $_ -Recurse;
+				"$_ has been deleted" | Out-File -FilePath $logPath$logDir$logFileName -append;
+			}
+			#add these now-deleted drives to the output.
+			$deletedDirs+=$drivesToDelete;
+		}
+		else{
+			"$currentDrive didn't delete anything as it failed to turn off the failsafe! Are you sure this drive contains AD objects?" | Out-File -FilePath $logPath$logDir$logFileName -append;
+			"$currentDrive didn't delete anything as it failed to turn off the failsafe! Are you sure this drive contains AD objects?" | Out-File -FilePath $logPath$logDir$logFileName -append;
+			"$currentDrive didn't delete anything as it failed to turn off the failsafe! Are you sure this drive contains AD objects?" | Out-File -FilePath $logPath$logDir$logFileName -append;
+			"$currentDrive didn't delete anything as it failed to turn off the failsafe! Are you sure this drive contains AD objects?" | Out-File -FilePath $logPath$logDir$logFileName -append;
+			"$currentDrive didn't delete anything as it failed to turn off the failsafe! Are you sure this drive contains AD objects?" | Out-File -FilePath $logPath$logDir$logFileName -append;
 		}
 	}
 	else{
@@ -81,8 +104,3 @@ Send-MailMessage @sendMailMessageSplat
 #Remove-Item -Path $targetPath -Recurse;
 #"DFS link for $currentDrive$dirName was removed" | Out-File -FilePath $logPath$logDir$logFileName -append;
 #"Corresponding folder $targetPath was removed" | Out-File -FilePath $logPath$logDir$logFileName -append;
-
-#Could build a failsafe in:
-#For each drive, initialize a variable to false, indicating whether a folder has been found that DOES exist in AD.
-#if it ever skips a folder because it exists in AD, set this variable to true.
-#if it gets to the end of this drive, and the variable is still false, don't delete anything in the drive, as it's suspicious that this script is being used on a folder that doesn't correlate to any AD objects.
